@@ -1,0 +1,393 @@
+/* ================================
+   LAIA - Estilo holográfico tipo JARVIS
+   Solo afecta al asistente IA
+================================ */
+
+.laia-widget,
+.laia-chat,
+.laia-panel,
+.laia-container {
+  --laia-bg: rgba(3, 12, 24, 0.92);
+  --laia-bg-soft: rgba(6, 22, 42, 0.82);
+  --laia-cyan: #00d9ff;
+  --laia-blue: #0077ff;
+  --laia-text: #d8f7ff;
+  --laia-muted: #7ab8cc;
+  --laia-danger: #ff4d6d;
+  --laia-success: #00ff99;
+
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* Botón flotante */
+.laia-floating,
+.laia-button,
+.laia-toggle {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, rgba(0, 217, 255, 0.45), rgba(0, 40, 80, 0.95) 58%, rgba(0, 0, 0, 0.95)),
+    conic-gradient(from 0deg, #00d9ff, #004cff, #00d9ff);
+  border: 1px solid rgba(0, 217, 255, 0.9);
+  color: var(--laia-text);
+  box-shadow:
+    0 0 12px rgba(0, 217, 255, 0.9),
+    0 0 35px rgba(0, 119, 255, 0.8),
+    inset 0 0 20px rgba(0, 217, 255, 0.45);
+  z-index: 9999;
+  cursor: pointer;
+  overflow: hidden;
+  animation: laiaPulse 2s infinite ease-in-out;
+}
+
+.laia-floating::before,
+.laia-button::before,
+.laia-toggle::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  border: 2px solid rgba(180, 245, 255, 0.55);
+  box-shadow: inset 0 0 15px rgba(0, 217, 255, 0.75);
+}
+
+.laia-floating::after,
+.laia-button::after,
+.laia-toggle::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+  transform: rotate(35deg);
+  animation: laiaSweep 3.5s infinite;
+}
+
+/* Panel principal */
+.laia-chat,
+.laia-panel {
+  position: fixed;
+  right: 28px;
+  bottom: 128px;
+  width: 420px;
+  max-width: calc(100vw - 36px);
+  height: 620px;
+  max-height: calc(100vh - 160px);
+  background:
+    linear-gradient(145deg, rgba(4, 13, 25, 0.96), rgba(5, 28, 55, 0.92)),
+    radial-gradient(circle at 50% 0%, rgba(0, 217, 255, 0.2), transparent 40%);
+  border: 1px solid rgba(0, 217, 255, 0.55);
+  border-radius: 22px;
+  color: var(--laia-text);
+  box-shadow:
+    0 0 30px rgba(0, 217, 255, 0.35),
+    0 0 80px rgba(0, 119, 255, 0.22),
+    inset 0 0 40px rgba(0, 217, 255, 0.08);
+  z-index: 9998;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+}
+
+/* Marco futurista */
+.laia-chat::before,
+.laia-panel::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(0, 217, 255, 0.22);
+  border-radius: 18px;
+  pointer-events: none;
+  box-shadow: inset 0 0 18px rgba(0, 217, 255, 0.12);
+}
+
+.laia-chat::after,
+.laia-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(0, 217, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 217, 255, 0.04) 1px, transparent 1px);
+  background-size: 22px 22px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Cabecera */
+.laia-header {
+  position: relative;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(0, 217, 255, 0.28);
+  background: linear-gradient(90deg, rgba(0, 217, 255, 0.12), transparent);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--laia-cyan);
+  font-weight: 800;
+  text-shadow: 0 0 10px rgba(0, 217, 255, 0.9);
+}
+
+.laia-header small,
+.laia-status {
+  display: block;
+  color: var(--laia-muted);
+  font-size: 11px;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+/* Avatar holográfico */
+.laia-avatar,
+.laia-orb {
+  width: 150px;
+  height: 150px;
+  margin: 22px auto 10px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(220, 255, 255, 0.95) 0 5%, rgba(0, 217, 255, 0.75) 7%, rgba(0, 80, 160, 0.4) 42%, transparent 70%),
+    conic-gradient(from 90deg, transparent, rgba(0, 217, 255, 0.85), transparent, rgba(0, 119, 255, 0.8), transparent);
+  border: 1px solid rgba(0, 217, 255, 0.75);
+  box-shadow:
+    0 0 25px rgba(0, 217, 255, 0.85),
+    0 0 70px rgba(0, 119, 255, 0.5),
+    inset 0 0 28px rgba(0, 217, 255, 0.35);
+  animation: laiaRotate 7s linear infinite, laiaGlow 2.4s ease-in-out infinite;
+  position: relative;
+}
+
+.laia-avatar::before,
+.laia-orb::before {
+  content: "LA";
+  position: absolute;
+  inset: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #eaffff;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  background: radial-gradient(circle, rgba(0, 217, 255, 0.22), rgba(0,0,0,0.65));
+  text-shadow: 0 0 14px rgba(0, 217, 255, 1);
+}
+
+.laia-avatar::after,
+.laia-orb::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 217, 255, 0.65);
+  animation: laiaRotateReverse 11s linear infinite;
+}
+
+/* Zona de mensajes */
+.laia-messages,
+.laia-body {
+  position: relative;
+  padding: 16px 18px;
+  height: 360px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--laia-cyan) transparent;
+}
+
+.laia-messages::-webkit-scrollbar,
+.laia-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.laia-messages::-webkit-scrollbar-thumb,
+.laia-body::-webkit-scrollbar-thumb {
+  background: var(--laia-cyan);
+  border-radius: 999px;
+}
+
+/* Burbujas */
+.laia-message,
+.laia-bubble {
+  max-width: 84%;
+  padding: 12px 14px;
+  margin: 10px 0;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  background: rgba(7, 28, 52, 0.78);
+  box-shadow: 0 0 14px rgba(0, 217, 255, 0.13);
+}
+
+.laia-message.user,
+.laia-bubble.user,
+.laia-user {
+  margin-left: auto;
+  background: linear-gradient(135deg, rgba(0, 119, 255, 0.85), rgba(0, 217, 255, 0.32));
+  border-color: rgba(0, 217, 255, 0.7);
+}
+
+.laia-message.ai,
+.laia-bubble.ai,
+.laia-assistant {
+  margin-right: auto;
+  background: linear-gradient(135deg, rgba(4, 20, 38, 0.9), rgba(0, 80, 140, 0.35));
+}
+
+/* Entrada */
+.laia-input-area,
+.laia-footer {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid rgba(0, 217, 255, 0.35);
+  border-radius: 18px;
+  background: rgba(1, 10, 22, 0.88);
+  box-shadow: inset 0 0 18px rgba(0, 217, 255, 0.08);
+}
+
+.laia-input-area input,
+.laia-footer input,
+.laia-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--laia-text);
+  font-size: 14px;
+}
+
+.laia-input-area input::placeholder,
+.laia-input::placeholder {
+  color: rgba(150, 220, 240, 0.55);
+}
+
+/* Botones */
+.laia-send,
+.laia-mic,
+.laia-control,
+.laia-input-area button,
+.laia-footer button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 217, 255, 0.75);
+  background:
+    radial-gradient(circle, rgba(0,217,255,0.35), rgba(0,60,120,0.95));
+  color: white;
+  cursor: pointer;
+  box-shadow:
+    0 0 12px rgba(0, 217, 255, 0.65),
+    inset 0 0 12px rgba(0, 217, 255, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.laia-send:hover,
+.laia-mic:hover,
+.laia-control:hover,
+.laia-input-area button:hover,
+.laia-footer button:hover {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 20px rgba(0, 217, 255, 0.95),
+    inset 0 0 16px rgba(0, 217, 255, 0.35);
+}
+
+/* Estados */
+.laia-listening,
+.laia-active {
+  color: var(--laia-success);
+  text-shadow: 0 0 10px rgba(0, 255, 153, 0.9);
+}
+
+.laia-error {
+  color: var(--laia-danger);
+  text-shadow: 0 0 8px rgba(255, 77, 109, 0.8);
+}
+
+/* Ondas de voz */
+.laia-wave {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 4px;
+  height: 38px;
+  margin: 8px auto;
+}
+
+.laia-wave span {
+  width: 4px;
+  height: 10px;
+  background: var(--laia-cyan);
+  border-radius: 999px;
+  box-shadow: 0 0 10px var(--laia-cyan);
+  animation: laiaWave 1s infinite ease-in-out;
+}
+
+.laia-wave span:nth-child(2) { animation-delay: .1s; }
+.laia-wave span:nth-child(3) { animation-delay: .2s; }
+.laia-wave span:nth-child(4) { animation-delay: .3s; }
+.laia-wave span:nth-child(5) { animation-delay: .4s; }
+
+/* Animaciones */
+@keyframes laiaPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 12px rgba(0, 217, 255, 0.9), 0 0 35px rgba(0, 119, 255, 0.8);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 22px rgba(0, 217, 255, 1), 0 0 60px rgba(0, 119, 255, 1);
+  }
+}
+
+@keyframes laiaSweep {
+  0% { transform: translateX(-80%) rotate(35deg); }
+  55%, 100% { transform: translateX(120%) rotate(35deg); }
+}
+
+@keyframes laiaRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes laiaRotateReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes laiaGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
+}
+
+@keyframes laiaWave {
+  0%, 100% { height: 8px; opacity: .55; }
+  50% { height: 34px; opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .laia-chat,
+  .laia-panel {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    bottom: 110px;
+    height: 560px;
+  }
+
+  .laia-floating,
+  .laia-button,
+  .laia-toggle {
+    right: 18px;
+    bottom: 18px;
+    width: 72px;
+    height: 72px;
+  }
+}

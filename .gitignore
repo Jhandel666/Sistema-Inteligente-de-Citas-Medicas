@@ -1,0 +1,32 @@
+# Entornos y dependencias locales
+.venv/
+venv/
+frontend/node_modules/
+
+# Caché / compilados
+__pycache__/
+*.py[cod]
+*$py.class
+frontend/.vite/
+frontend/dist/
+
+# Variables locales / secretos
+.env
+.env.local
+
+# Logs y sistema
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build Python
+build/
+dist/
+*.egg-info/
+
+# Modelos/datasets grandes generados localmente
+# Mantén estos fuera del ZIP/Git si pesan mucho.
+# Si necesitas entregar el modelo entrenado, súbelo aparte.
+app/ml/models/whisper/

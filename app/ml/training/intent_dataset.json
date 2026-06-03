@@ -1,0 +1,42 @@
+[
+  {
+    "text": "quiero reservar una cita medica",
+    "intent": "agendar_cita"
+  },
+  {
+    "text": "deseo sacar una cita con el doctor",
+    "intent": "agendar_cita"
+  },
+  {
+    "text": "necesito una consulta medica",
+    "intent": "agendar_cita"
+  },
+  {
+    "text": "quiero cancelar mi cita",
+    "intent": "cancelar_cita"
+  },
+  {
+    "text": "deseo anular mi cita medica",
+    "intent": "cancelar_cita"
+  },
+  {
+    "text": "quiero confirmar mi ticket",
+    "intent": "consultar_cita"
+  },
+  {
+    "text": "deseo consultar mi cita",
+    "intent": "consultar_cita"
+  },
+  {
+    "text": "quiero saber el estado de mi cita",
+    "intent": "consultar_cita"
+  },
+  {
+    "text": "quiero reprogramar mi cita",
+    "intent": "reprogramar_cita"
+  },
+  {
+    "text": "deseo cambiar la fecha de mi cita",
+    "intent": "reprogramar_cita"
+  }
+]

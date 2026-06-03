@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# ML datasets & models (generated at training time)
+app/ml/datasets/
+app/ml/models/
+
+# Frontend (served separately)
+frontend/
+frontend/node_modules/
+frontend/dist/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Logs
+*.log
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Docs
+README*.md
+README_BACKEND_CRUD.md
+
+# Other
+Sistema Inteligente_Gestion de Citas Medicas/
+*.zip
+package.json
+package-lock.json

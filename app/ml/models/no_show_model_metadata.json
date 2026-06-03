@@ -1,0 +1,43 @@
+{
+  "tipo_proyecto": "ML",
+  "algoritmo": "RandomForestClassifier",
+  "librerias": [
+    "numpy",
+    "pandas",
+    "scikit-learn"
+  ],
+  "dataset": "citas_medicas_pichanaki_junin_5000.csv",
+  "feature_columns": [
+    "edad_paciente",
+    "genero",
+    "especialidad",
+    "prioridad",
+    "turno_cita",
+    "num_inasistencias_previas",
+    "distancia_km",
+    "dias_para_cita",
+    "minutos_espera_estimados"
+  ],
+  "target_column": "nivel_riesgo",
+  "categorical_columns": [
+    "genero",
+    "especialidad",
+    "prioridad",
+    "turno_cita"
+  ],
+  "numeric_columns": [
+    "edad_paciente",
+    "num_inasistencias_previas",
+    "distancia_km",
+    "dias_para_cita",
+    "minutos_espera_estimados"
+  ],
+  "accuracy": 0.549,
+  "mse": 0.862,
+  "clases": [
+    "alto",
+    "bajo",
+    "medio"
+  ],
+  "observacion": "Modelo entrenado con columnas en español, sin IA externa ni APIs de terceros."
+}
