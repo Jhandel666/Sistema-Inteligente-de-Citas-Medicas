@@ -330,6 +330,28 @@ def cancelar_cita(
     return CitaRespuesta.model_validate(cita)
 
 
+@router.get(
+    "/modelo/arquitectura",
+    status_code=status.HTTP_200_OK,
+    summary="Obtener arquitectura del modelo DL",
+)
+def obtener_arquitectura_modelo() -> dict:
+    from app.ml.visualization.model_viz_service import ModelVisualizationService
+    servicio = ModelVisualizationService()
+    return servicio.obtener_arquitectura()
+
+
+@router.get(
+    "/modelo/pesos",
+    status_code=status.HTTP_200_OK,
+    summary="Obtener pesos y sesgos del modelo DL",
+)
+def obtener_pesos_modelo() -> dict:
+    from app.ml.visualization.model_viz_service import ModelVisualizationService
+    servicio = ModelVisualizationService()
+    return servicio.obtener_pesos()
+
+
 @router.post(
     "/{cita_id}/asistencia",
     status_code=status.HTTP_201_CREATED,
