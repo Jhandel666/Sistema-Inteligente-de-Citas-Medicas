@@ -1,0 +1,408 @@
+{
+  "arquitectura": {
+    "modelo": "LSTM Bidirectional para Clasificación de Intenciones",
+    "framework": "TensorFlow / Keras",
+    "modelo_cargado": true,
+    "total_params_estimados": "919,616+",
+    "optimizador": "Adam",
+    "loss": "sparse_categorical_crossentropy",
+    "metricas": [
+      "accuracy"
+    ],
+    "num_clases": 9,
+    "clases": [
+      "agendar_cita",
+      "cancelar_cita",
+      "consultar_cita",
+      "consultar_doctor",
+      "emergencia",
+      "informacion_servicios",
+      "queja_reclamo",
+      "reprogramar_cita",
+      "resultados_lab"
+    ],
+    "layers": [
+      {
+        "name": "Embedding",
+        "type": "embedding",
+        "units": "vocab_size x 128",
+        "activation": null,
+        "params": "5000 × 128 = 640,000",
+        "description": "Convierte cada token en un vector denso de 128 dimensiones",
+        "input_shape": "(25,)",
+        "output_shape": "(25, 128)",
+        "neurons": 128,
+        "index": 0
+      },
+      {
+        "name": "Bidirectional LSTM",
+        "type": "lstm",
+        "units": "128 × 2 = 256",
+        "activation": "tanh (default)",
+        "params": "4 × (128 × 128 + 128 × 128 + 128) × 2 = 263,168",
+        "description": "Captura dependencias secuenciales en ambas direcciones",
+        "input_shape": "(25, 128)",
+        "output_shape": "(256,)",
+        "neurons": 256,
+        "index": 1
+      },
+      {
+        "name": "Dropout",
+        "type": "dropout",
+        "units": "256",
+        "activation": null,
+        "params": "0 (no entrenables)",
+        "rate": 0.35,
+        "description": "Apaga aleatoriamente el 35% de las neuronas para evitar sobreajuste",
+        "input_shape": "(256,)",
+        "output_shape": "(256,)",
+        "neurons": 256,
+        "index": 2
+      },
+      {
+        "name": "Dense (ReLU)",
+        "type": "dense",
+        "units": 64,
+        "activation": "relu",
+        "params": "256 × 64 + 64 = 16,448",
+        "description": "Capa fully-connected con activación ReLU para aprender representaciones de alto nivel",
+        "input_shape": "(256,)",
+        "output_shape": "(64,)",
+        "neurons": 64,
+        "index": 3
+      },
+      {
+        "name": "Dropout",
+        "type": "dropout",
+        "units": 64,
+        "activation": null,
+        "params": "0 (no entrenables)",
+        "rate": 0.25,
+        "description": "Apaga aleatoriamente el 25% de las neuronas",
+        "input_shape": "(64,)",
+        "output_shape": "(64,)",
+        "neurons": 64,
+        "index": 4
+      },
+      {
+        "name": "Dense (Softmax)",
+        "type": "output",
+        "units": 9,
+        "activation": "softmax",
+        "params": "64 × 9 + 9 = 585",
+        "description": "Capa de salida que produce una distribución de probabilidad sobre las intenciones",
+        "input_shape": "(64,)",
+        "output_shape": "(num_clases,)",
+        "neurons": 9,
+        "index": 5
+      }
+    ],
+    "diagnostico": "Modelo cargado correctamente con 9 clases: agendar_cita, cancelar_cita, consultar_cita, consultar_doctor, emergencia, informacion_servicios, queja_reclamo, reprogramar_cita, resultados_lab"
+  },
+  "pesos": {
+    "modelo_cargado": true,
+    "total_parametros_entrenables": 326921,
+    "resumen": {
+      "total_pesos": 325824,
+      "total_sesgos": 1097
+    },
+    "pesos_por_capa": [
+      {
+        "layer_index": 0,
+        "layer_name": "embedding",
+        "weights": [
+          {
+            "shape": [
+              365,
+              128
+            ],
+            "size": 46720,
+            "sample_values": [
+              [
+                0.067415,
+                0.021937,
+                -0.009147
+              ],
+              [
+                -0.006154,
+                -0.012968,
+                0.028993
+              ],
+              [
+                -0.088711,
+                0.030348,
+                -0.14094
+              ]
+            ],
+            "mean": -0.000626,
+            "std": 0.064171,
+            "min": -0.323727,
+            "max": 0.282547
+          }
+        ],
+        "biases": []
+      },
+      {
+        "layer_index": 1,
+        "layer_name": "bidirectional",
+        "weights": [
+          {
+            "shape": [
+              128,
+              512
+            ],
+            "size": 65536,
+            "sample_values": [
+              [
+                0.005174,
+                0.049404,
+                -0.064537
+              ],
+              [
+                0.089547,
+                0.101958,
+                0.09872
+              ],
+              [
+                -0.127774,
+                -0.020876,
+                -0.023658
+              ]
+            ],
+            "mean": -0.000799,
+            "std": 0.061562,
+            "min": -0.208325,
+            "max": 0.21277
+          },
+          {
+            "shape": [
+              128,
+              512
+            ],
+            "size": 65536,
+            "sample_values": [
+              [
+                -0.000938,
+                -0.03722,
+                -0.026191
+              ],
+              [
+                -0.034303,
+                0.043513,
+                -0.040787
+              ],
+              [
+                0.004147,
+                -0.008204,
+                -0.113684
+              ]
+            ],
+            "mean": 0.000369,
+            "std": 0.049156,
+            "min": -0.197524,
+            "max": 0.200873
+          },
+          {
+            "shape": [
+              128,
+              512
+            ],
+            "size": 65536,
+            "sample_values": [
+              [
+                -0.011443,
+                0.033366,
+                -0.070711
+              ],
+              [
+                -0.14759,
+                0.084499,
+                0.011805
+              ],
+              [
+                -0.088633,
+                -0.008043,
+                -0.028678
+              ]
+            ],
+            "mean": -0.000921,
+            "std": 0.08285,
+            "min": -0.316044,
+            "max": 0.297573
+          },
+          {
+            "shape": [
+              128,
+              512
+            ],
+            "size": 65536,
+            "sample_values": [
+              [
+                -0.048787,
+                -0.023017,
+                -0.064722
+              ],
+              [
+                -0.083886,
+                -0.045326,
+                -0.135266
+              ],
+              [
+                0.019662,
+                -0.04028,
+                0.037957
+              ]
+            ],
+            "mean": -0.002524,
+            "std": 0.064782,
+            "min": -0.309306,
+            "max": 0.264015
+          }
+        ],
+        "biases": [
+          {
+            "shape": [
+              512
+            ],
+            "size": 512,
+            "sample_values": [
+              0.014513,
+              -0.027715,
+              1.6e-05,
+              -0.013709,
+              -0.017065
+            ],
+            "mean": 0.245036,
+            "std": 0.436814,
+            "min": -0.07365,
+            "max": 1.049868
+          },
+          {
+            "shape": [
+              512
+            ],
+            "size": 512,
+            "sample_values": [
+              -0.02026,
+              0.039482,
+              0.029588,
+              0.009481,
+              0.038085
+            ],
+            "mean": 0.272025,
+            "std": 0.428017,
+            "min": -0.036152,
+            "max": 1.071831
+          }
+        ]
+      },
+      {
+        "layer_index": 3,
+        "layer_name": "dense",
+        "weights": [
+          {
+            "shape": [
+              256,
+              64
+            ],
+            "size": 16384,
+            "sample_values": [
+              [
+                0.090729,
+                0.014473,
+                -0.145621
+              ],
+              [
+                -0.031987,
+                0.01102,
+                -0.091519
+              ],
+              [
+                -0.131966,
+                -0.074549,
+                0.068544
+              ]
+            ],
+            "mean": -0.000871,
+            "std": 0.096162,
+            "min": -0.314261,
+            "max": 0.33725
+          }
+        ],
+        "biases": [
+          {
+            "shape": [
+              64
+            ],
+            "size": 64,
+            "sample_values": [
+              0.024241,
+              0.028748,
+              -0.019449,
+              0.019572,
+              0.02291
+            ],
+            "mean": 0.015308,
+            "std": 0.019081,
+            "min": -0.032442,
+            "max": 0.106374
+          }
+        ]
+      },
+      {
+        "layer_index": 5,
+        "layer_name": "dense_1",
+        "weights": [
+          {
+            "shape": [
+              64,
+              9
+            ],
+            "size": 576,
+            "sample_values": [
+              [
+                -0.250208,
+                0.249745,
+                0.279579
+              ],
+              [
+                -0.395763,
+                -0.345934,
+                0.039688
+              ],
+              [
+                0.159352,
+                -0.034361,
+                -0.111483
+              ]
+            ],
+            "mean": -0.034727,
+            "std": 0.199654,
+            "min": -0.4599,
+            "max": 0.366477
+          }
+        ],
+        "biases": [
+          {
+            "shape": [
+              9
+            ],
+            "size": 9,
+            "sample_values": [
+              -0.007866,
+              0.010577,
+              0.022067,
+              -0.003246,
+              -0.015252
+            ],
+            "mean": -0.001339,
+            "std": 0.014028,
+            "min": -0.023657,
+            "max": 0.022067
+          }
+        ]
+      }
+    ],
+    "diagnostico": "Modelo cargado correctamente con 9 clases: agendar_cita, cancelar_cita, consultar_cita, consultar_doctor, emergencia, informacion_servicios, queja_reclamo, reprogramar_cita, resultados_lab"
+  }
+}

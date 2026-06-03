@@ -25,7 +25,7 @@ class ModelVisualizationService:
                 "type": "embedding",
                 "units": "vocab_size x 128",
                 "activation": None,
-                "params": "5000 × 128 = 640,000",
+                "params": "5000 \u00d7 128 = 640,000",
                 "description": "Convierte cada token en un vector denso de 128 dimensiones",
                 "input_shape": "(25,)",
                 "output_shape": "(25, 128)",
@@ -34,9 +34,9 @@ class ModelVisualizationService:
             {
                 "name": "Bidirectional LSTM",
                 "type": "lstm",
-                "units": "128 × 2 = 256",
+                "units": "128 \u00d7 2 = 256",
                 "activation": "tanh (default)",
-                "params": "4 × (128 × 128 + 128 × 128 + 128) × 2 = 263,168",
+                "params": "4 \u00d7 (128 \u00d7 128 + 128 \u00d7 128 + 128) \u00d7 2 = 263,168",
                 "description": "Captura dependencias secuenciales en ambas direcciones",
                 "input_shape": "(25, 128)",
                 "output_shape": "(256,)",
@@ -59,8 +59,8 @@ class ModelVisualizationService:
                 "type": "dense",
                 "units": 64,
                 "activation": "relu",
-                "params": "256 × 64 + 64 = 16,448",
-                "description": "Capa fully-connected con activación ReLU para aprender representaciones de alto nivel",
+                "params": "256 \u00d7 64 + 64 = 16,448",
+                "description": "Capa fully-connected con activaci\u00f3n ReLU para aprender representaciones de alto nivel",
                 "input_shape": "(256,)",
                 "output_shape": "(64,)",
                 "neurons": 64,
@@ -82,8 +82,8 @@ class ModelVisualizationService:
                 "type": "output",
                 "units": "num_clases (7-9)",
                 "activation": "softmax",
-                "params": "64 × num_clases + num_clases",
-                "description": "Capa de salida que produce una distribución de probabilidad sobre las intenciones",
+                "params": "64 \u00d7 num_clases + num_clases",
+                "description": "Capa de salida que produce una distribuci\u00f3n de probabilidad sobre las intenciones",
                 "input_shape": "(64,)",
                 "output_shape": "(num_clases,)",
                 "neurons": "num_clases",
@@ -94,12 +94,27 @@ class ModelVisualizationService:
         self._modelo_cargado = False
         self._num_clases = 7
         self._clases = []
+        self._diagnostico = None
 
         self._cargar_modelo()
 
     def _cargar_modelo(self) -> None:
         if not self.model_path.exists():
-            logger.warning("Modelo LSTM no encontrado. Usando blueprint de arquitectura.")
+            self._diagnostico = f"Archivo .keras no encontrado en: {self.model_path}"
+            logger.warning(self._diagnostico)
+            return
+
+        self._diagnostico = f"Modelo encontrado en: {self.model_path}"
+
+        try:
+            import tensorflow as tf
+            logger.info("TensorFlow %s detectado", tf.__version__)
+        except ImportError:
+            self._diagnostico = (
+                "TensorFlow no está instalado en este entorno de Python. "
+                "Instalalo con: pip install tensorflow"
+            )
+            logger.error(self._diagnostico)
             return
 
         try:
@@ -114,6 +129,10 @@ class ModelVisualizationService:
                     le = pickle.load(f)
                 self._clases = list(le.classes_)
                 self._num_clases = len(self._clases)
+                self._diagnostico = (
+                    f"Modelo cargado correctamente con {self._num_clases} clases: "
+                    f"{', '.join(self._clases)}"
+                )
 
             logger.info("Modelo LSTM cargado para visualización.")
 
@@ -121,7 +140,8 @@ class ModelVisualizationService:
             del model
             gc.collect()
         except Exception as e:
-            logger.error("Error cargando modelo LSTM: %s", e)
+            self._diagnostico = f"Error al cargar el modelo .keras: {e}"
+            logger.error(self._diagnostico)
 
     def _extraer_pesos(self, model) -> None:
         self._pesos_reales = []
@@ -162,13 +182,13 @@ class ModelVisualizationService:
             if entry.get("units") == "num_clases (7-9)":
                 entry["units"] = self._num_clases
                 entry["neurons"] = self._num_clases
-                entry["params"] = f"64 × {self._num_clases} + {self._num_clases} = {64 * self._num_clases + self._num_clases:,}"
-            elif isinstance(entry.get("units"), int) and entry.get("params", "").startswith("256 × 64"):
-                entry["params"] = f"256 × 64 + 64 = 16,448"
+                entry["params"] = f"64 \u00d7 {self._num_clases} + {self._num_clases} = {64 * self._num_clases + self._num_clases:,}"
+            elif isinstance(entry.get("units"), int) and entry.get("params", "").startswith("256 \u00d7 64"):
+                entry["params"] = f"256 \u00d7 64 + 64 = 16,448"
             layers.append(entry)
 
         return {
-            "modelo": "LSTM Bidirectional para Clasificación de Intenciones",
+            "modelo": "LSTM Bidirectional para Clasificaci\u00f3n de Intenciones",
             "framework": "TensorFlow / Keras",
             "modelo_cargado": self._modelo_cargado,
             "total_params_estimados": "919,616+",
@@ -178,30 +198,33 @@ class ModelVisualizationService:
             "num_clases": self._num_clases,
             "clases": self._clases,
             "layers": layers,
+            "diagnostico": self._diagnostico,
         }
 
     def obtener_pesos(self) -> dict:
-        if not self._pesos_reales:
+        if self._modelo_cargado and self._pesos_reales:
+            total_weights = 0
+            total_biases = 0
+            for capa in self._pesos_reales:
+                for w in capa["weights"]:
+                    total_weights += w["size"]
+                for b in capa["biases"]:
+                    total_biases += b["size"]
+
             return {
-                "modelo_cargado": False,
-                "mensaje": "El modelo LSTM no está entrenado. Entrena el modelo ejecutando el script de entrenamiento para ver pesos y sesgos reales.",
-                "pesos_por_capa": [],
+                "modelo_cargado": True,
+                "total_parametros_entrenables": total_weights + total_biases,
+                "resumen": {
+                    "total_pesos": total_weights,
+                    "total_sesgos": total_biases,
+                },
+                "pesos_por_capa": self._pesos_reales,
+                "diagnostico": self._diagnostico,
             }
 
-        total_weights = 0
-        total_biases = 0
-        for capa in self._pesos_reales:
-            for w in capa["weights"]:
-                total_weights += w["size"]
-            for b in capa["biases"]:
-                total_biases += b["size"]
-
         return {
-            "modelo_cargado": True,
-            "total_parametros_entrenables": total_weights + total_biases,
-            "resumen": {
-                "total_pesos": total_weights,
-                "total_sesgos": total_biases,
-            },
-            "pesos_por_capa": self._pesos_reales,
+            "modelo_cargado": False,
+            "mensaje": "El modelo LSTM no est\u00e1 disponible para extraer pesos y sesgos.",
+            "pesos_por_capa": [],
+            "diagnostico": self._diagnostico,
         }

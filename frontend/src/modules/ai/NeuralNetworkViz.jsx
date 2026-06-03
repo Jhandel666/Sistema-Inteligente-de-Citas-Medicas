@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Brain, Layers, BarChart3, Loader2, AlertCircle } from "lucide-react";
-import api from "../../services/api";
+import { useState } from "react";
+import { Brain, Layers, BarChart3, AlertCircle, CheckCircle2 } from "lucide-react";
+import modelData from "./model_data.json";
 
 const LAYER_COLORS = {
   embedding: { bar: "#bfdbfe", border: "#3b82f6", text: "#1e3a5f", neuron: "#3b82f6", label: "Entrada" },
@@ -10,7 +10,7 @@ const LAYER_COLORS = {
   output: { bar: "#fecaca", border: "#ef4444", text: "#7f1d1d", neuron: "#ef4444", label: "Salida" },
 };
 
-function NeuronDots({ count, max, cx, cy, r, color, label }) {
+function NeuronDots({ count, max, cx, cy, r, color }) {
   const shown = Math.min(count, max);
   const spacing = Math.min(16, Math.floor(480 / shown));
   const startX = cx - (shown * spacing) / 2;
@@ -31,52 +31,10 @@ function NeuronDots({ count, max, cx, cy, r, color, label }) {
 }
 
 function NeuralNetworkViz() {
-  const [data, setData] = useState(null);
-  const [weightsData, setWeightsData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [tab, setTab] = useState("arch");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [archRes, weightRes] = await Promise.all([
-          api.get("/appointments/modelo/arquitectura"),
-          api.get("/appointments/modelo/pesos"),
-        ]);
-        setData(archRes.data);
-        setWeightsData(weightRes.data);
-      } catch (err) {
-        setError(err.response?.data?.detail || err.message || "Error al cargar datos del modelo");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="animate-spin text-blue-600 mr-3" size={28} />
-        <span className="text-gray-600 text-lg">Cargando arquitectura del modelo...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-4">
-        <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={24} />
-        <div>
-          <h4 className="font-bold text-red-800">Error al cargar visualización</h4>
-          <p className="text-red-700 text-sm mt-1">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
+  const data = modelData.arquitectura;
+  const weightsData = modelData.pesos;
   if (!data) return null;
 
   const layers = data.layers || [];
@@ -84,7 +42,6 @@ function NeuralNetworkViz() {
   const layerHeight = 65;
   const gap = 18;
   const svgHeight = layers.length * (layerHeight + gap) + gap;
-  const neuronMaxX = 620;
   const neuronCenterX = 380;
   const neuronR = 5;
 
@@ -166,7 +123,7 @@ function NeuralNetworkViz() {
                     <rect
                       x={40}
                       y={y}
-                      width={neuronMaxX - 40}
+                      width={580}
                       height={layerHeight}
                       rx={10}
                       fill={colors.bar}
@@ -185,7 +142,7 @@ function NeuralNetworkViz() {
                     />
 
                     <text
-                      x={neuronMaxX + 16}
+                      x={640}
                       y={layerMiddleY + 4}
                       fontSize={13}
                       fontWeight="bold"
@@ -195,7 +152,7 @@ function NeuralNetworkViz() {
                     </text>
 
                     <text
-                      x={neuronMaxX + 16}
+                      x={640}
                       y={layerMiddleY + 20}
                       fontSize={11}
                       fill="#6b7280"
@@ -212,7 +169,7 @@ function NeuralNetworkViz() {
 
               {data.modelo_cargado && (
                 <text x={svgWidth - 10} y={svgHeight - 6} fontSize={10} fill="#22c55e" textAnchor="end">
-                  ● Modelo entrenado cargado
+                  ● Modelo entrenado — {data.num_clases} clases
                 </text>
               )}
             </svg>
@@ -274,23 +231,29 @@ function NeuralNetworkViz() {
                 <p className="text-lg font-bold text-gray-800 mt-1">{data.num_clases}</p>
               </div>
             </div>
+
+            {data.clases?.length > 0 && (
+              <div className="mt-4 bg-gray-50 rounded-lg px-4 py-3">
+                <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider mb-2">Clases entrenadas</p>
+                <div className="flex flex-wrap gap-2">
+                  {data.clases.map((clase) => (
+                    <span
+                      key={clase}
+                      className="inline-flex items-center gap-1 bg-white border border-green-200 text-green-800 px-2.5 py-1 rounded-full text-xs font-medium"
+                    >
+                      <CheckCircle2 size={12} />
+                      {clase}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {tab === "weights" && (
           <div className="p-5">
-            {!weightsData?.modelo_cargado ? (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-                <AlertCircle size={40} className="mx-auto text-amber-500 mb-3" />
-                <h4 className="font-bold text-amber-800 text-lg">Modelo no entrenado</h4>
-                <p className="text-amber-700 mt-2 max-w-lg mx-auto text-sm">
-                  {weightsData?.mensaje || "El modelo LSTM no ha sido entrenado todavía. Ejecuta el script de entrenamiento para visualizar los pesos y sesgos reales."}
-                </p>
-                <div className="mt-4 inline-block bg-amber-100 text-amber-800 px-4 py-2 rounded-lg text-sm font-mono">
-                  python app/ml/training/rnn_intent_training_template.py
-                </div>
-              </div>
-            ) : (
+            {weightsData?.modelo_cargado ? (
               <div className="space-y-6">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-gray-50 rounded-lg px-4 py-3">
@@ -398,11 +361,27 @@ function NeuralNetworkViz() {
                       )}
 
                       {capa.weights.length === 0 && capa.biases.length === 0 && (
-                        <p className="text-sm text-gray-500 italic">Capa sin parámetros entrenables</p>
+                        <p className="text-sm text-gray-500 italic">Capa sin parámetros entrenables (Dropout)</p>
                       )}
                     </div>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+                <AlertCircle size={40} className="mx-auto text-amber-500 mb-3" />
+                <h4 className="font-bold text-amber-800 text-lg">Datos de pesos no disponibles</h4>
+                <p className="text-amber-700 mt-2 max-w-lg mx-auto text-sm">
+                  {weightsData?.mensaje || "Los pesos y sesgos no están disponibles en esta compilación."}
+                </p>
+                {weightsData?.diagnostico && (
+                  <div className="mt-3 max-w-lg mx-auto bg-amber-100/70 rounded-lg px-4 py-2 text-xs text-left font-mono text-amber-900 whitespace-pre-wrap break-all">
+                    {weightsData.diagnostico}
+                  </div>
+                )}
+                <div className="mt-4 inline-block bg-amber-100 text-amber-800 px-4 py-2 rounded-lg text-sm font-mono">
+                  python app/ml/training/rnn_intent_training_template.py
+                </div>
               </div>
             )}
           </div>
