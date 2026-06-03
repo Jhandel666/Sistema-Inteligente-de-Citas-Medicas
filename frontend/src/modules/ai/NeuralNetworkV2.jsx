@@ -2,48 +2,92 @@ import { useState } from "react";
 import { Brain, Layers, BarChart3, AlertCircle, CheckCircle2 } from "lucide-react";
 import modelData from "./model_data.json";
 
-const LAYER_COLORS = {
-  embedding: { bar: "#bfdbfe", border: "#3b82f6", text: "#1e3a5f", neuron: "#3b82f6", label: "Entrada" },
-  lstm: { bar: "#e9d5ff", border: "#9333ea", text: "#581c87", neuron: "#9333ea", label: "Oculta" },
-  dropout: { bar: "#fde68a", border: "#d97706", text: "#78350f", neuron: "#d97706", label: "Regularización" },
-  dense: { bar: "#a7f3d0", border: "#10b981", text: "#064e3b", neuron: "#10b981", label: "Oculta" },
-  output: { bar: "#fecaca", border: "#ef4444", text: "#7f1d1d", neuron: "#ef4444", label: "Salida" },
+const COLORS = {
+  input: { fill: "#3b82f6", stroke: "#1e3a5f", label: "Capa de Entrada (Embedding)" },
+  lstm: { fill: "#10b981", stroke: "#065f46", label: "Capa Oculta (BiLSTM)" },
+  dense: { fill: "#10b981", stroke: "#065f46", label: "Capa Oculta (Dense + ReLU)" },
+  output: { fill: "#3b82f6", stroke: "#1e3a5f", label: "Capa de Salida (Softmax)" },
 };
 
-function NeuronDots({ count, max, cx, cy, r, color }) {
-  const shown = Math.min(count, max);
-  const spacing = Math.min(16, Math.floor(480 / shown));
-  const startX = cx - (shown * spacing) / 2;
-  const dots = [];
-  for (let i = 0; i < shown; i++) {
-    dots.push(
-      <circle key={i} cx={startX + i * spacing + 8} cy={cy} r={r} fill={color} opacity={0.9} />
-    );
-  }
-  if (count > max) {
-    dots.push(
-      <text key="more" x={startX + shown * spacing + 12} y={cy + 4} fontSize={11} fill="#6b7280">
-        +{count - max} más
-      </text>
-    );
-  }
-  return <g>{dots}</g>;
+function getColorForLayer(type) {
+  if (type === "embedding" || type === "input") return COLORS.input;
+  if (type === "lstm") return COLORS.lstm;
+  if (type === "dense") return COLORS.dense;
+  if (type === "output") return COLORS.output;
+  return COLORS.dense;
 }
 
-function NeuralNetworkViz() {
-  const [tab, setTab] = useState("arch");
+function getActivationLabel(layer) {
+  if (layer.activation) return layer.activation.toUpperCase();
+  if (layer.type === "dropout") return `DROPOUT ${layer.rate}`;
+  return "—";
+}
 
+function getLayerSummary(layer) {
+  const units = typeof layer.units === "number" ? layer.units : (layer.neurons || "?");
+  return `${units} neuronas`;
+}
+
+function NeuralNetworkV2() {
+  const [tab, setTab] = useState("network");
   const data = modelData.arquitectura;
   const weightsData = modelData.pesos;
+
   if (!data) return null;
 
-  const layers = data.layers || [];
-  const svgWidth = 860;
-  const layerHeight = 65;
-  const gap = 18;
-  const svgHeight = layers.length * (layerHeight + gap) + gap;
-  const neuronCenterX = 380;
-  const neuronR = 5;
+  const layers = data.layers.filter((l) => l.type !== "dropout");
+  const realLayers = data.layers;
+
+  const inputCount = 5;
+  const lstmCount = 6;
+  const denseCount = 5;
+  const outputCount = 9;
+
+  const layerXPositions = [80, 280, 480, 680];
+  const layerYStart = 60;
+  const neuronRadius = 22;
+  const verticalSpacing = 60;
+
+  const inputY = layerYStart + 0;
+  const lstmY = layerYStart + 0;
+  const denseY = layerYStart + Math.max(0, (lstmCount - denseCount) * verticalSpacing / 2);
+  const outputY = layerYStart + Math.max(0, (lstmCount - outputCount) * verticalSpacing / 2);
+
+  const inputPositions = Array.from({ length: inputCount }, (_, i) => ({
+    x: layerXPositions[0],
+    y: inputY + i * verticalSpacing,
+  }));
+  const lstmPositions = Array.from({ length: lstmCount }, (_, i) => ({
+    x: layerXPositions[1],
+    y: lstmY + i * verticalSpacing,
+  }));
+  const densePositions = Array.from({ length: denseCount }, (_, i) => ({
+    x: layerXPositions[2],
+    y: denseY + i * verticalSpacing,
+  }));
+  const outputPositions = Array.from({ length: outputCount }, (_, i) => ({
+    x: layerXPositions[3],
+    y: outputY + i * verticalSpacing,
+  }));
+
+  const allLayers = [
+    { positions: inputPositions, count: inputCount, info: realLayers[0], color: COLORS.input, actualNeurons: 128 },
+    { positions: lstmPositions, count: lstmCount, info: realLayers[1], color: COLORS.lstm, actualNeurons: 256 },
+    { positions: densePositions, count: denseCount, info: realLayers[3], color: COLORS.dense, actualNeurons: 64 },
+    { positions: outputPositions, count: outputCount, info: realLayers[5], color: COLORS.output, actualNeurons: 9 },
+  ];
+
+  const svgWidth = 800;
+  const svgHeight = Math.max(
+    inputPositions[inputPositions.length - 1]?.y || 0,
+    lstmPositions[lstmPositions.length - 1]?.y || 0,
+    densePositions[densePositions.length - 1]?.y || 0,
+    outputPositions[outputPositions.length - 1]?.y || 0
+  ) + 100;
+
+  const getWeightBiasForLayer = (layerIndex) => {
+    return weightsData?.pesos_por_capa?.find((c) => c.layer_index === layerIndex) || null;
+  };
 
   return (
     <div className="space-y-6">
@@ -53,7 +97,7 @@ function NeuralNetworkViz() {
             <div>
               <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                 <Brain size={24} className="text-blue-600" />
-                Arquitectura del Modelo de Deep Learning
+                Red Neuronal Profunda (Deep Neural Network)
               </h3>
               <p className="text-gray-500 mt-1">
                 {data.modelo} — {data.framework}
@@ -61,15 +105,15 @@ function NeuralNetworkViz() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setTab("arch")}
+                onClick={() => setTab("network")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  tab === "arch"
+                  tab === "network"
                     ? "bg-blue-100 text-blue-800"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 <Layers size={16} />
-                Arquitectura
+                Diagrama
               </button>
               <button
                 onClick={() => setTab("weights")}
@@ -86,133 +130,191 @@ function NeuralNetworkViz() {
           </div>
         </div>
 
-        {tab === "arch" && (
+        {tab === "network" && (
           <div className="p-5">
-            <svg
-              viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-              className="w-full h-auto"
-              style={{ maxHeight: 600 }}
-            >
-              <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#9ca3af" />
-                </marker>
-              </defs>
-
-              {layers.map((layer, i) => {
-                const y = gap + i * (layerHeight + gap);
-                const colors = LAYER_COLORS[layer.type] || LAYER_COLORS.dense;
-                const layerMiddleY = y + layerHeight / 2;
-                const neuronCount = typeof layer.neurons === "number" ? layer.neurons : 8;
-
-                return (
-                  <g key={i}>
-                    {i > 0 && (
-                      <line
-                        x1={neuronCenterX}
-                        y1={gap + (i - 1) * (layerHeight + gap) + layerHeight}
-                        x2={neuronCenterX}
-                        y2={y}
-                        stroke="#9ca3af"
-                        strokeWidth={2}
-                        strokeDasharray="5,3"
-                        markerEnd="url(#arrowhead)"
-                      />
-                    )}
-
-                    <rect
-                      x={40}
-                      y={y}
-                      width={580}
-                      height={layerHeight}
-                      rx={10}
-                      fill={colors.bar}
-                      stroke={colors.border}
-                      strokeWidth={1.5}
-                      opacity={0.7}
-                    />
-
-                    <NeuronDots
-                      count={neuronCount}
-                      max={28}
-                      cx={neuronCenterX}
-                      cy={layerMiddleY}
-                      r={neuronR}
-                      color={colors.neuron}
-                    />
-
-                    <text
-                      x={640}
-                      y={layerMiddleY + 4}
-                      fontSize={13}
-                      fontWeight="bold"
-                      fill={colors.text}
-                    >
-                      {layer.name}
-                    </text>
-
-                    <text
-                      x={640}
-                      y={layerMiddleY + 20}
-                      fontSize={11}
-                      fill="#6b7280"
-                    >
-                      {layer.units} {layer.activation ? `· ${layer.activation.toUpperCase()}` : ""}
-                    </text>
-
-                    <text x={16} y={layerMiddleY + 4} fontSize={10} fill="#6b7280" textAnchor="end">
-                      {colors.label}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {data.modelo_cargado && (
-                <text x={svgWidth - 10} y={svgHeight - 6} fontSize={10} fill="#22c55e" textAnchor="end">
-                  ● Modelo entrenado — {data.num_clases} clases
-                </text>
-              )}
-            </svg>
-
-            <div className="mt-6 overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left px-3 py-2 font-semibold text-gray-700">#</th>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-700">Capa</th>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-700">Tipo</th>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-700">Neuronas / Unidades</th>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-700">Activación</th>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-700">Params entrenables</th>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-700">Descripción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {layers.map((layer, i) => {
-                    const colors = LAYER_COLORS[layer.type] || LAYER_COLORS.dense;
-                    return (
-                      <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="px-3 py-2 text-gray-500">{i + 1}</td>
-                        <td className="px-3 py-2 font-medium text-gray-800">{layer.name}</td>
-                        <td className="px-3 py-2">
-                          <span
-                            className="inline-block px-2 py-0.5 rounded text-xs font-semibold"
-                            style={{ backgroundColor: colors.bar, color: colors.text }}
-                          >
-                            {layer.type}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-gray-700">{layer.units}</td>
-                        <td className="px-3 py-2 text-gray-700">{layer.activation || "—"}</td>
-                        <td className="px-3 py-2 text-gray-700 font-mono text-xs">{layer.params}</td>
-                        <td className="px-3 py-2 text-gray-500 text-xs max-w-xs">{layer.description}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div className="mb-3 text-sm text-gray-600 flex items-center gap-2">
+              <span className="font-semibold">Arquitectura:</span>
+              <span>Embedding (128) → BiLSTM (256) → Dropout → Dense+ReLU (64) → Dropout → Dense+Softmax (9)</span>
             </div>
 
+            <div className="bg-gray-50 rounded-lg p-4 overflow-x-auto">
+              <svg
+                viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                className="w-full h-auto"
+                style={{ minWidth: 750 }}
+              >
+                <defs>
+                  <marker
+                    id="arrow"
+                    markerWidth="8"
+                    markerHeight="8"
+                    refX="6"
+                    refY="4"
+                    orient="auto"
+                  >
+                    <path d="M0,0 L0,8 L8,4 z" fill="#94a3b8" />
+                  </marker>
+                </defs>
+
+                {/* Connections between layers with weight labels */}
+                {allLayers.slice(0, -1).map((layer, layerIdx) => {
+                  const nextLayer = allLayers[layerIdx + 1];
+                  const weightInfo = getWeightBiasForLayer(layer.info.index);
+                  const numWeights = weightInfo?.weights?.[0];
+                  const numBiases = weightInfo?.biases?.[0];
+                  const totalConn = layer.positions.length * nextLayer.positions.length;
+                  
+                  return (
+                    <g key={`conn-${layerIdx}`}>
+                      {layer.positions.map((p1, i) =>
+                        nextLayer.positions.map((p2, j) => (
+                          <line
+                            key={`line-${layerIdx}-${i}-${j}`}
+                            x1={p1.x + neuronRadius}
+                            y1={p1.y}
+                            x2={p2.x - neuronRadius}
+                            y2={p2.y}
+                            stroke="#94a3b8"
+                            strokeWidth={0.8}
+                            opacity={0.5}
+                          />
+                        ))
+                      )}
+                      {/* Weight label between layers */}
+                      <text
+                        x={(layer.positions[0].x + nextLayer.positions[0].x) / 2}
+                        y={-5}
+                        fontSize={11}
+                        fontWeight="bold"
+                        fill="#1e40af"
+                        textAnchor="middle"
+                      >
+                        W{layerIdx + 1}: {numWeights ? JSON.stringify(numWeights.shape) : "?"}
+                      </text>
+                      <text
+                        x={(layer.positions[0].x + nextLayer.positions[0].x) / 2}
+                        y={8}
+                        fontSize={9}
+                        fill="#6b7280"
+                        textAnchor="middle"
+                      >
+                        ({totalConn} conexiones)
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {/* Neurons with bias labels */}
+                {allLayers.map((layer, layerIdx) => {
+                  const biasInfo = getWeightBiasForLayer(layer.info.index);
+                  const biases = biasInfo?.biases?.[0]?.sample_values || [];
+                  
+                  return (
+                    <g key={`layer-${layerIdx}`}>
+                      {/* Layer label at top */}
+                      <text
+                        x={layer.positions[0].x}
+                        y={-20}
+                        fontSize={12}
+                        fontWeight="bold"
+                        fill={layer.color.stroke}
+                        textAnchor="middle"
+                      >
+                        {layer.color.label}
+                      </text>
+                      <text
+                        x={layer.positions[0].x}
+                        y={-7}
+                        fontSize={10}
+                        fill="#6b7280"
+                        textAnchor="middle"
+                      >
+                        {getActivationLabel(layer.info)} · {layer.actualNeurons} neuronas
+                      </text>
+
+                      {/* Neurons */}
+                      {layer.positions.map((pos, i) => {
+                        const biasVal = biases[i] !== undefined ? biases[i].toFixed(3) : null;
+                        return (
+                          <g key={`n-${layerIdx}-${i}`}>
+                            <circle
+                              cx={pos.x}
+                              cy={pos.y}
+                              r={neuronRadius}
+                              fill={layer.color.fill}
+                              stroke={layer.color.stroke}
+                              strokeWidth={2}
+                            />
+                            <text
+                              x={pos.x}
+                              y={pos.y + 4}
+                              fontSize={9}
+                              fill="white"
+                              textAnchor="middle"
+                              fontWeight="bold"
+                            >
+                              n{i + 1}
+                            </text>
+                            {/* Bias label */}
+                            {biasVal !== null && (
+                              <text
+                                x={pos.x}
+                                y={pos.y + neuronRadius + 14}
+                                fontSize={8}
+                                fill="#7c3aed"
+                                textAnchor="middle"
+                                fontFamily="monospace"
+                              >
+                                b={biasVal}
+                              </text>
+                            )}
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                })}
+
+                {/* Output class labels */}
+                {outputPositions.map((pos, i) => {
+                  const clase = data.clases?.[i] || `clase_${i}`;
+                  return (
+                    <text
+                      key={`out-label-${i}`}
+                      x={pos.x + neuronRadius + 8}
+                      y={pos.y + 4}
+                      fontSize={9}
+                      fill="#1e40af"
+                      fontWeight="bold"
+                    >
+                      {clase}
+                    </text>
+                  );
+                })}
+              </svg>
+            </div>
+
+            {/* Legend */}
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-blue-800" />
+                <span className="text-xs text-gray-700">Capa Entrada/Salida</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-green-800" />
+                <span className="text-xs text-gray-700">Capas Ocultas</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-4 bg-gray-400" />
+                <span className="text-xs text-gray-700">Pesos (W)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-purple-700">b=0.xxx</span>
+                <span className="text-xs text-gray-700">Sesgos (b)</span>
+              </div>
+            </div>
+
+            {/* Summary stats */}
             <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-gray-50 rounded-lg px-4 py-3">
                 <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">Optimizador</p>
@@ -231,23 +333,6 @@ function NeuralNetworkViz() {
                 <p className="text-lg font-bold text-gray-800 mt-1">{data.num_clases}</p>
               </div>
             </div>
-
-            {data.clases?.length > 0 && (
-              <div className="mt-4 bg-gray-50 rounded-lg px-4 py-3">
-                <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider mb-2">Clases entrenadas</p>
-                <div className="flex flex-wrap gap-2">
-                  {data.clases.map((clase) => (
-                    <span
-                      key={clase}
-                      className="inline-flex items-center gap-1 bg-white border border-green-200 text-green-800 px-2.5 py-1 rounded-full text-xs font-medium"
-                    >
-                      <CheckCircle2 size={12} />
-                      {clase}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -391,4 +476,4 @@ function NeuralNetworkViz() {
   );
 }
 
-export default NeuralNetworkViz;
+export default NeuralNetworkV2;

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, Eye } from "lucide-react";
 import PageCard from "../components/ui/PageCard";
 import AiIntentForm from "../modules/ai/AiIntentForm";
-import NeuralNetworkViz from "../modules/ai/NeuralNetworkViz";
+import NeuralNetworkV2 from "../modules/ai/NeuralNetworkV2";
 
 function AiVoicePage() {
   const [showViz, setShowViz] = useState(false);
@@ -32,7 +32,7 @@ function AiVoicePage() {
 
         {showViz && (
           <div className="border-t border-gray-200">
-            <NeuralNetworkViz />
+            <NeuralNetworkV2 />
           </div>
         )}
       </div>
