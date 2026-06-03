@@ -32,13 +32,14 @@ def _load_from_csv() -> tuple[list[str], list[str]]:
     if not DATASET_CSV_PATH.exists():
         return [], []
     df = pd.read_csv(DATASET_CSV_PATH)
-    if "intent" not in df.columns:
+    intent_col = next((c for c in ["intent", "intencion"] if c in df.columns), None)
+    if not intent_col:
         return [], []
-    text_col = "text" if "text" in df.columns else "voice_text"
-    if text_col not in df.columns:
+    text_col = next((c for c in ["text", "texto", "voice_text"] if c in df.columns), None)
+    if not text_col:
         return [], []
-    df = df[[text_col, "intent"]].dropna()
-    return df[text_col].astype(str).tolist(), df["intent"].astype(str).tolist()
+    df = df[[text_col, intent_col]].dropna()
+    return df[text_col].astype(str).tolist(), df[intent_col].astype(str).tolist()
 
 
 def _load_from_json() -> tuple[list[str], list[str]]:
@@ -110,9 +111,12 @@ def train_model() -> None:
     print(f"Vocabulario: {vocab_size}")
     print(f"Clases: {num_classes} -> {list(label_encoder.classes_)}")
 
-    stratify = y if min(pd.Series(y).value_counts()) >= 2 else None
+    min_per_class = min(pd.Series(y).value_counts())
+    use_stratify = y if min_per_class >= 2 and min_per_class * 0.2 >= 1 else None
+    if use_stratify is None:
+        print(f"⚠ Clases muy pequeñas (min={min_per_class}), se usará split aleatorio simple")
     x_train, x_val, y_train, y_val = train_test_split(
-        x, y, test_size=0.2, random_state=42, stratify=stratify
+        x, y, test_size=0.2, random_state=42, stratify=use_stratify
     )
 
     model = build_lstm_model(vocab_size, MAX_LENGTH, num_classes)
