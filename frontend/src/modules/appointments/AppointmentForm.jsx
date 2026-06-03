@@ -12,13 +12,6 @@ function toGenderSelect(v) {
   return v;
 }
 
-const ESPECIALIDADES = [
-  "Cardiología", "Dermatología", "Emergencia", "Endocrinología",
-  "Ginecología", "Medicina General", "Medicina Interna", "Neumología",
-  "Nutrición", "Odontología", "Oftalmología", "Pediatría",
-  "Psicología", "Traumatología", "Urología",
-];
-
 const initialRiskData = {
   edad_paciente: "",
   genero: "",
@@ -49,6 +42,27 @@ const calcularDiasHastaCita = (fechaCita) => {
   const cita = new Date(fechaCita);
   const diff = cita - hoy;
   return diff > 0 ? Math.round(diff / (1000 * 60 * 60 * 24)) : 0;
+};
+
+const pareceHoraOFecha = (valor) => {
+  const texto = String(valor || "").trim().toLowerCase();
+  if (!texto) return false;
+  if (/^\d{1,2}:\d{2}$/.test(texto)) return true;
+  if (/^\d{1,2}(\s*)(am|pm)$/.test(texto)) return true;
+  if (/^\d{4}-\d{2}-\d{2}/.test(texto)) return true;
+  if (/^\d{1,2}\s+de\s+[a-záéíóúñ]+/.test(texto)) return true;
+  return false;
+};
+
+const normalizarValoresCita = (values = {}) => {
+  const motivo = values.reason ?? values.motivo ?? "";
+
+  return {
+    patient_id: String(values.patient_id ?? values.paciente_id ?? ""),
+    doctor_id: String(values.doctor_id ?? values.medico_id ?? ""),
+    scheduled_at: values.scheduled_at ?? values.programada_en ?? "",
+    reason: pareceHoraOFecha(motivo) ? "" : motivo,
+  };
 };
 
 function AppointmentForm({ onPredict, initialData, onCancelEdit }) {
@@ -91,10 +105,7 @@ function AppointmentForm({ onPredict, initialData, onCancelEdit }) {
 
   useEffect(() => {
     if (session && session.entity === "appointment") {
-      const vals = {};
-      for (const [key, val] of Object.entries(session.values)) {
-        vals[key] = key === "patient_id" || key === "doctor_id" ? String(val) : val;
-      }
+      const vals = normalizarValoresCita(session.values);
       setFormData((prev) => ({ ...prev, ...vals }));
     }
   }, [session?.values]);
@@ -194,6 +205,7 @@ function AppointmentForm({ onPredict, initialData, onCancelEdit }) {
           La IA está llenando el formulario paso a paso
         </div>
       )}
+
       <select name="patient_id" value={formData.patient_id} onChange={handleChange} className="w-full border p-3 rounded-lg" required>
         <option value="">Seleccione paciente</option>
         {patients.map((p) => (
@@ -202,6 +214,7 @@ function AppointmentForm({ onPredict, initialData, onCancelEdit }) {
           </option>
         ))}
       </select>
+
       <select name="doctor_id" value={formData.doctor_id} onChange={handleChange} className="w-full border p-3 rounded-lg" required>
         <option value="">Seleccione médico</option>
         {doctors.map((d) => (
@@ -210,37 +223,49 @@ function AppointmentForm({ onPredict, initialData, onCancelEdit }) {
           </option>
         ))}
       </select>
+
       <div>
         <label className="block mb-2 font-medium text-gray-700">Fecha y hora de la cita</label>
         <input type="datetime-local" name="scheduled_at" value={formData.scheduled_at} onChange={handleChange} min={new Date().toISOString().slice(0, 16)} className="w-full border p-3 rounded-lg" required />
       </div>
+
       <textarea name="reason" value={formData.reason} onChange={handleChange} className="w-full border p-3 rounded-lg" placeholder="Motivo de la cita" required />
 
       <div className="border-t pt-4 mt-4">
         <h3 className="font-semibold text-gray-700 mb-3">Predicción de Riesgo - Modelo de Entrenamiento IA</h3>
         <div className="grid grid-cols-3 gap-4">
           <input type="number" name="edad_paciente" value={riskData.edad_paciente} onChange={handleRiskChange} className="border p-3 rounded-lg" placeholder="Edad del paciente" min="0" max="120" required />
+
           <select name="genero" value={riskData.genero} onChange={handleRiskChange} className="border p-3 rounded-lg" required>
             <option value="">Sexo</option>
             <option value="M">Masculino</option>
             <option value="F">Femenino</option>
           </select>
-          <select name="especialidad" value={riskData.especialidad} onChange={handleRiskChange} className="border p-3 rounded-lg" required>
-            <option value="">Especialidad</option>
-            {ESPECIALIDADES.map((esp) => <option key={esp} value={esp}>{esp}</option>)}
-          </select>
+
+          <input
+            type="text"
+            name="especialidad"
+            value={riskData.especialidad}
+            readOnly
+            className="border p-3 rounded-lg bg-gray-100 text-gray-700"
+            placeholder="Especialidad autoasignada por el médico"
+            required
+          />
+
           <select name="prioridad" value={riskData.prioridad} onChange={handleRiskChange} className="border p-3 rounded-lg" required>
             <option value="">Prioridad</option>
             <option value="baja">Baja</option>
             <option value="media">Media</option>
             <option value="alta">Alta</option>
           </select>
+
           <select name="turno_cita" value={riskData.turno_cita} onChange={handleRiskChange} className="border p-3 rounded-lg" required>
             <option value="">Turno</option>
             <option value="manana">Mañana</option>
             <option value="tarde">Tarde</option>
             <option value="noche">Noche</option>
           </select>
+
           <input type="number" name="conteo_inasistencias_previas" value={riskData.conteo_inasistencias_previas} onChange={handleRiskChange} className="border p-3 rounded-lg" placeholder="Faltas previas" min="0" required />
           <input type="number" step="0.1" name="distancia_km" value={riskData.distancia_km} onChange={handleRiskChange} className="border p-3 rounded-lg" placeholder="Distancia km" min="0" required />
           <input type="number" name="dias_hasta_cita" value={riskData.dias_hasta_cita} onChange={handleRiskChange} className="border p-3 rounded-lg" placeholder="Días hasta la cita" min="0" required />
@@ -255,7 +280,7 @@ function AppointmentForm({ onPredict, initialData, onCancelEdit }) {
           </button>
         )}
         <button className="w-full bg-green-600 text-white p-3 rounded-lg" disabled={predicting}>
-          {predicting ? "Analizando riesgo..." : (initialData ? "Actualizar cita" : "Crear cita")}
+          {predicting ? "Analizando riesgo..." : initialData ? "Actualizar cita" : "Crear cita"}
         </button>
       </div>
     </form>

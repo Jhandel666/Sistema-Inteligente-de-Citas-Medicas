@@ -12,6 +12,12 @@ from app.schemas.appointment import CitaCrear, CitaActualizar
 from app.services.notification_service import ServicioNotificaciones
 
 
+def normalizar_fecha(fecha: datetime) -> datetime:
+    if fecha.tzinfo is None:
+        return fecha.replace(tzinfo=UTC)
+    return fecha.astimezone(UTC)
+
+
 class ServicioCitas:
     def __init__(
         self,
@@ -43,12 +49,16 @@ class ServicioCitas:
         if not medico:
             raise NotFoundException("Médico no encontrado")
 
-        if datos.programada_en < datetime.now(UTC):
+        programada_en = normalizar_fecha(datos.programada_en)
+
+        if programada_en < datetime.now(UTC):
             raise ConflictException("No se puede agendar una cita en el pasado")
+
+        datos.programada_en = programada_en
 
         conflicto = self.repositorio_citas.obtener_cita_medico_en_horario(
             medico_id=datos.medico_id,
-            programada_en=datos.programada_en,
+            programada_en=programada_en,
         )
         if conflicto:
             raise ConflictException("El médico ya tiene una cita en ese horario")
@@ -69,8 +79,13 @@ class ServicioCitas:
         if "medico_id" in cambios and not self.repositorio_medicos.obtener_por_id(medico_id):
             raise NotFoundException("Médico no encontrado")
 
-        if "programada_en" in cambios and programada_en < datetime.now(UTC):
-            raise ConflictException("No se puede reprogramar una cita al pasado")
+        if "programada_en" in cambios:
+            programada_en = normalizar_fecha(programada_en)
+
+            if programada_en < datetime.now(UTC):
+                raise ConflictException("No se puede reprogramar una cita al pasado")
+
+            cambios["programada_en"] = programada_en
 
         if "medico_id" in cambios or "programada_en" in cambios:
             conflicto = self.repositorio_citas.obtener_cita_medico_en_horario(
@@ -141,9 +156,10 @@ class ServicioCitas:
         return ticket, resultado_envio
 
     def sugerir_horarios_disponibles(self, medico_id: int, programada_en, cantidad: int = 3) -> list[str]:
-        """Sugiere horarios alternativos cercanos dentro del rango 8:00 a 17:00."""
         sugerencias: list[str] = []
+        programada_en = normalizar_fecha(programada_en)
         base_dia = programada_en.replace(minute=0, second=0, microsecond=0)
+
         candidatos = []
         for desplazamiento in [30, 60, 90, 120, -30, -60, 150, 180, 210, 240]:
             candidatos.append(base_dia + timedelta(minutes=desplazamiento))
@@ -181,7 +197,7 @@ class ServicioCitas:
             raise NotFoundException("Ticket no encontrado")
         return ticket
 
-# Compatibilidad con nombres anteriores en inglés.
+
 AppointmentService = ServicioCitas
 
 ServicioCitas.list_appointments = ServicioCitas.listar_citas

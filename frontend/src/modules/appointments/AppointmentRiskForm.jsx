@@ -2,24 +2,6 @@ import { useState, useEffect } from "react";
 import { predictAppointmentRisk } from "./appointmentService";
 import { useFormFilling } from "../../context/FormFillingContext";
 
-const ESPECIALIDADES = [
-  "Cardiología",
-  "Dermatología",
-  "Emergencia",
-  "Endocrinología",
-  "Ginecología",
-  "Medicina General",
-  "Medicina Interna",
-  "Neumología",
-  "Nutrición",
-  "Odontología",
-  "Oftalmología",
-  "Pediatría",
-  "Psicología",
-  "Traumatología",
-  "Urología",
-];
-
 const initialFormData = {
   edad_paciente: "",
   genero: "",
@@ -84,20 +66,35 @@ function AppointmentRiskForm({ appointmentIds }) {
 
   useEffect(() => {
     if (!riskData) return;
-    setFormData((prev) => ({ ...prev, ...Object.fromEntries(Object.entries(normalizarRiesgo(riskData)).map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)])) }));
+    setFormData((prev) => ({
+      ...prev,
+      ...Object.fromEntries(
+        Object.entries(normalizarRiesgo(riskData)).map(([k, v]) => [
+          k,
+          v === null || v === undefined ? "" : String(v),
+        ]),
+      ),
+    }));
   }, [riskData]);
 
   useEffect(() => {
     if (!riskData) return;
-    const merged = { ...formData, ...Object.fromEntries(Object.entries(normalizarRiesgo(riskData)).map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)])) };
+    const merged = {
+      ...formData,
+      ...Object.fromEntries(
+        Object.entries(normalizarRiesgo(riskData)).map(([k, v]) => [
+          k,
+          v === null || v === undefined ? "" : String(v),
+        ]),
+      ),
+    };
     if (!hasAllRiskFields(merged)) return;
 
     setPredicting(true);
-      predictAppointmentRisk(toRiskPayload(merged, appointmentIds))
+    predictAppointmentRisk(toRiskPayload(merged, appointmentIds))
       .then(setResult)
       .catch(() => {})
       .finally(() => setPredicting(false));
-    // Se ejecuta solo cuando llega riskData desde el asistente.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [riskData]);
 
@@ -132,7 +129,7 @@ function AppointmentRiskForm({ appointmentIds }) {
   };
 
   const resultado = result ? obtenerResultado(result) : null;
-  const cfg = resultado ? (riskConfig[resultado.nivel_riesgo] || riskConfig.medio) : null;
+  const cfg = resultado ? riskConfig[resultado.nivel_riesgo] || riskConfig.medio : null;
   const confianzaPorcentaje = resultado ? (resultado.confianza <= 1 ? resultado.confianza * 100 : resultado.confianza) : 0;
 
   return (
@@ -146,10 +143,15 @@ function AppointmentRiskForm({ appointmentIds }) {
           <option value="F">Femenino</option>
         </select>
 
-        <select name="especialidad" value={formData.especialidad} onChange={handleChange} className="border p-3 rounded-lg" required>
-          <option value="">Especialidad</option>
-          {ESPECIALIDADES.map((especialidad) => <option key={especialidad} value={especialidad}>{especialidad}</option>)}
-        </select>
+        <input
+          type="text"
+          name="especialidad"
+          value={formData.especialidad}
+          readOnly
+          className="border p-3 rounded-lg bg-gray-100 text-gray-700"
+          placeholder="Especialidad autoasignada por el médico"
+          required
+        />
 
         <select name="prioridad" value={formData.prioridad} onChange={handleChange} className="border p-3 rounded-lg" required>
           <option value="">Prioridad</option>
