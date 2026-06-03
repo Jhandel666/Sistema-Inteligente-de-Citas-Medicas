@@ -7,10 +7,6 @@ venv/
 dist/
 build/
 
-# ML datasets & models (generated at training time)
-app/ml/datasets/
-app/ml/models/
-
 # Frontend (served separately)
 frontend/
 frontend/node_modules/
